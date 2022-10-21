@@ -1,6 +1,7 @@
 package raft
 
 import (
+	"fmt"
 	"math/rand"
 	"sync"
 	"sync/atomic"
@@ -113,6 +114,7 @@ func (raft *Raft) GetRaftStateLogLastIndex() int64 {
 }
 
 func (raft *Raft) GetRaftStateLogLastTerm() int64 {
+	fmt.Println("GetRaftStateLogLastTerm", raft.GetRaftStateLogLastIndex())
 	return raft.state.log[raft.GetRaftStateLogLastIndex()].Term
 }
 

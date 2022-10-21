@@ -39,12 +39,4 @@ func TestElection(t *testing.T) {
 	require.Nil(t, nodeThree.state.leader)
 	require.Nil(t, nodeFour.state.leader)
 	require.Nil(t, nodeFive.state.leader)
-
-	nodeOne.sendRequestVoteToPeer(2)
-	nodeOne.sendRequestVoteToPeer(3)
-	nodeOne.sendRequestVoteToPeer(4)
-	nodeOne.sendRequestVoteToPeer(5)
-
-	// No leader should be elected
-	require.Nil(t, nodeOne.state.leader)
 }
