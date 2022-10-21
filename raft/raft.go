@@ -76,8 +76,8 @@ func NewRaft(me int64, peers []*Raft) *Raft {
 	raft.state = &RaftState{
 		term: 0,
 		votedFor: -1,
-		electionTimeout: time.Now().UnixNano() + rand.Int63n(100) + 100,
-		heartbeatTimeout: time.Now().UnixNano() + 50,
+		electionTimeout: time.Now().UnixNano() + rand.Int63n(10) + 5,
+		heartbeatTimeout: time.Now().UnixNano() + 10,
 		leaderId: -1,
 		candidate: nil,
 		leader: nil,
@@ -121,8 +121,8 @@ func (raft *Raft) StartElection() {
 	defer raft.mu.Unlock()
 	raft.state.term++
 	raft.state.votedFor = raft.me
-	raft.state.electionTimeout = time.Now().UnixNano() + rand.Int63n(150) + 150
-	raft.state.heartbeatTimeout = time.Now().UnixNano() + 50
+	raft.state.electionTimeout = time.Now().UnixNano() + rand.Int63n(15) + 5
+	raft.state.heartbeatTimeout = time.Now().UnixNano() + 10
 	raft.state.leaderId = -1
 	raft.state.leader = nil
 	raft.state.candidate = &RaftStateCandidate{
@@ -181,15 +181,13 @@ func (raft *Raft) BecomeCandidate() {
 func (raft *Raft) sendRequestVote() {
 	for i := 0; i < len(raft.peers); i++ {
 		if int64(i) != raft.me {
-			go func(i int) {
-				raft.mu.Lock()
-				if raft.state.candidate != nil {
-					raft.mu.Unlock()
-					raft.sendRequestVoteToPeer(int64(i))
-				} else {
-					raft.mu.Unlock()
-				}
-			}(i)
+			raft.mu.Lock()
+			if raft.state.candidate != nil {
+				raft.mu.Unlock()
+				raft.sendRequestVoteToPeer(int64(i))
+			} else {
+				raft.mu.Unlock()
+			}
 		}
 	}
 }
