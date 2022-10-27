@@ -7,13 +7,12 @@ import (
 )
 
 func CreateNetwork(t *testing.T) (*Network){
-	network := NewNetwork(5)
-	require.Equal(t, network.nodes, int64(5))
+	network := NewNetwork()
 	return network
 }
 
 func TestCreateNetWork(t *testing.T) {
 	network := CreateNetwork(t)
-	network.KillNetwork()
-	require.Equal(t, network.IsNetworkDead, true)
+	require.Equal(t, len(*network.Nodes), int(0))
+	require.Equal(t, network.IsNetworkDead, false)
 }
