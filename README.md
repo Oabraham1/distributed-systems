@@ -1,2 +1,2 @@
-# distributed-systems
+# Distributed Systems
 Distributed Systems &amp; Algorithms
