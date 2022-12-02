@@ -2,43 +2,25 @@ package network
 
 import (
 	"time"
+	"github.com/oabraham1/distributed-systems/messages"
 )
 
 type Network struct {
 	Nodes 			[]*Node
-	Messages 		[]*Message
+	Messages 		[]*messages.Message
 	IsNetworkDead 	bool
-}
-
-type Message struct {
-	From 		int64
-	To 			int64
-	Content 	byte
-	Delay 		int64
-	Recieved 	bool
 }
 
 type Node struct {
 	ID 			int64
 	IsNodeDead 	bool
-	Sent 		[]*Message
-	Received 	[]*Message
+	Sent 		[]*messages.Message
+	Received 	[]*messages.Message
 }
-
 
 func NewNetwork() *Network {
 	return &Network{
 		IsNetworkDead: false,
-	}
-}
-
-func NewMessage(from, to, delay int64, content byte) *Message {
-	return &Message{
-		From: from,
-		To: to,
-		Content: content,
-		Delay: delay,
-		Recieved: false,
 	}
 }
 
@@ -49,8 +31,8 @@ func NewNode(id int64) *Node {
 	}
 }
 
-func (network *Network) AddMessage(from, to, delay int64, content byte) {
-	message := NewMessage(from, to, delay, content)
+func (network *Network) AddMessage(id, from, to, delay int64, messageType messages.MessageType) {
+	message := messages.NewMessage(id, from, to, delay, messageType)
 	network.Messages = append(network.Messages, message)
 }
 
@@ -67,9 +49,9 @@ func (network *Network) GetNode(id int64) *Node {
 	return nil
 }
 
-func (network *Network) RemoveMessage(message *Message) *Message {
+func (network *Network) RemoveMessage(message *messages.Message) *messages.Message {
 	for i, m := range network.Messages {
-		if m.From == message.From && m.To == message.To && m.Content == message.Content {
+		if m.String() == message.String() {
 			network.Messages = append((network.Messages)[:i], (network.Messages)[i+1:]...)
 			return m
 		}
@@ -87,7 +69,7 @@ func (network *Network) RemoveNode(id int64) {
 	}
 }
 
-func (network *Network) SendMessage(message *Message) {
+func (network *Network) SendMessage(message *messages.Message) {
 	for _, node := range network.Nodes {
 		if node.ID == message.From && !node.IsNodeDead && node.ID != message.To {
 			node.Sent = append(node.Sent, message)
@@ -96,18 +78,17 @@ func (network *Network) SendMessage(message *Message) {
 	}
 }
 
-func (network *Network) ReceiveMessage(message *Message) {
+func (network *Network) ReceiveMessage(message *messages.Message) {
 	for _, node := range network.Nodes {
 		if node.ID == message.To && !node.IsNodeDead {
 			node.Received = append(node.Received, message)
-			message.Recieved = true
+			message.Recieved = 1
 			return
 		}
 	}
 }
 
 func (network *Network) StreamMessages() {
-
 	for len(network.Messages) > int(0) {
 		for _, message := range network.Messages {
 			if message.Delay == 0 {
@@ -122,7 +103,7 @@ func (network *Network) StreamMessages() {
 	}
 }
 
-func (network *Network) Tick(message *Message) {
+func (network *Network) Tick(message *messages.Message) {
 	message.Delay--
 	time.Sleep(time.Second)
 }

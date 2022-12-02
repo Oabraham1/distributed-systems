@@ -5,11 +5,23 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/oabraham1/distributed-systems/messages"
 )
 
 func CreateNetwork(t *testing.T) (*Network){
 	network := NewNetwork()
 	return network
+}
+
+func CreateNewMessage(id, from int64, to int64, delay int64, messageType messages.MessageType) *messages.Message {
+	return &messages.Message{
+		ID:     id,
+		From:   from,
+		To:     to,
+		Type:   messageType,
+		Delay: delay,
+		Recieved: 0,
+	}
 }
 
 func TestCreateNetWork(t *testing.T) {
@@ -45,16 +57,16 @@ func TestRemoveMessage(t *testing.T) {
 	require.Equal(t, len(network.Nodes), int(5))
 
 	for i := 0; i < 5; i++ {
-		network.AddMessage(int64(i), int64(i+1), 4, byte(i))
+		network.AddMessage(int64(i), int64(i+1), int64(i), 4, messages.STARTLEADERELECTION)
 	}
 	require.Equal(t, len(network.Messages), int(5))
 
 	for i := 0; i < 5; i++ {
-		message := network.RemoveMessage(NewMessage(int64(i), int64(i+1), rand.Int63n(150), byte(i)))
+		message := network.RemoveMessage(CreateNewMessage(int64(i), int64(i+1), int64(i), 4, messages.STARTLEADERELECTION))
 		require.NotNil(t, message)
 	}
 	require.Equal(t, len(network.Messages), int(0))
-	message := network.RemoveMessage(NewMessage(int64(100), int64(100), rand.Int63n(150), byte(100)))
+	message := network.RemoveMessage(CreateNewMessage(int64(100), int64(150), int64(130), 4, messages.STARTLEADERELECTION))
 	require.Nil(t, message)
 }
 
@@ -66,19 +78,19 @@ func TestSendAndRecieveMessage(t *testing.T) {
 	require.Equal(t, len(network.Nodes), int(5))
 
 	for i := 0; i < 5; i++ {
-		network.AddMessage(int64(i), int64(i+1), 4, byte(i))
+		network.AddMessage(rand.Int63n(11), int64(i), int64(i+1), 4, messages.STARTLEADERELECTION)
 	}
 	require.Equal(t, len(network.Messages), int(5))
 
 	for i := 0; i < 4; i++ {
 		message := network.Messages[i]
 		network.SendMessage(message)
-		require.Equal(t, message.Recieved, false)
+		require.Equal(t, message.Recieved, int64(0))
 		require.Equal(t, len(network.GetNode(message.From).Sent), int(1))
 		require.Nil(t, network.GetNode(100))
 
 		network.ReceiveMessage(message)
-		require.Equal(t, message.Recieved, true)
+		require.Equal(t, message.Recieved, int64(1))
 		require.Equal(t, len(network.GetNode(message.To).Received), int(1))
 	}
 }
@@ -90,8 +102,8 @@ func TestStreamMessages(t *testing.T) {
 	}
 	require.Equal(t, len(network.Nodes), int(4))
 
-	network.AddMessage(int64(0), int64(1), rand.Int63n(3), byte(0))
-	network.AddMessage(int64(1), int64(0), rand.Int63n(3), byte(1))
+	network.AddMessage(rand.Int63n(11), int64(0), int64(1), 4, messages.STARTLEADERELECTION)
+	network.AddMessage(rand.Int63n(11), int64(1), int64(0), 4, messages.STARTLEADERELECTION)
 	require.Equal(t, len(network.Messages), int(2))
 
 	network.StreamMessages()
@@ -112,7 +124,7 @@ func TestTick(t *testing.T) {
 	require.Equal(t, len(network.Nodes), int(5))
 
 	for i := 0; i < 5; i++ {
-		network.AddMessage(int64(i), int64(i+1), 4, byte(i))
+		network.AddMessage(rand.Int63n(11), int64(i), int64(i+1), 4, messages.STARTLEADERELECTION)
 	}
 	require.Equal(t, len(network.Messages), int(5))
 
